@@ -1,15 +1,38 @@
-// import modules
-const express = require ("express");
-const mongoose = require("mongoose");
-const morgan=require("morgan");
-const cors=require("cors");
-require("dotenv").config();
+import express from 'express'
+import dotenv from 'dotenv'
+import mongoose from 'mongoose'
+import morgan from "morgan";
+import cors from "cors";
+import cookieParser from 'cookie-parser';
+import session from 'express-session'
+// const QRCode = require('qrcode');
+dotenv.config()
+import {userRouter} from './routes/User.js'
+import {profileRouter} from './routes/Profile.js'
+const app = express()
 
+app.use(morgan("dev"));
+app.use(cors(
+    {
+        origin:["http://localhost:5173"],
+        credentials: true
+    }
+));
 
+app.use(express.json());
+app.use(cookieParser())
 
-// app
-const app=express();
-app.use(express.json())
+app.use(session({
+    secret: 'mySecret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: true }
+  }));
+
+  
+app.use('/auth', userRouter)
+app.use('/product', profileRouter)
+
 
 
 // db
@@ -20,20 +43,8 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(()=> console.log("DB CONNECTED"))
 .catch((err)=> console.log("DB CONNECTION ERROR", err));
 
-// middleware
-app.use(morgan("dev"));
-app.use(cors());
-
-//routes
-const testRoutes = require("./routes/test")
-app.use("/", testRoutes);
 
 
-// port
-const port = process.env.PORT  || 5000;
-
-//listener
-const server = app.listen(port, ()=>
-    console.log(`Server is running on port ${port}`)
-);
-
+app.listen(process.env.PORT, ()=>{
+    console.log("Server is running")
+})
